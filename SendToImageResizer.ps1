@@ -633,7 +633,7 @@ function Show-MainMenu {
         Write-Host "E - Edit presets"
         Write-Host "Q - Quit"
         Write-Host
-        $choice = (Read-Host "Select").Trim()
+        $choice = (Read-Host "Select").Trim().TrimStart([char]0xFEFF)
 
         if ($choice -match "^[fF]$") {
             $selectedFolder = Select-MainFolder -InitialDirectory $folder
@@ -667,4 +667,3 @@ catch {
     [void](Read-Host "Press Enter to close")
     exit 1
 }
-

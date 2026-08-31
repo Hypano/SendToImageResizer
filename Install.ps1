@@ -32,6 +32,10 @@ function New-PowerShellShortcut {
 try {
     Write-Host "Installing SendToImageResizer..."
 
+    $sourceFullPath = [System.IO.Path]::GetFullPath($sourceDirectory).TrimEnd('\')
+    $installFullPath = [System.IO.Path]::GetFullPath($installDirectory).TrimEnd('\')
+    $repairOnly = $sourceFullPath.Equals($installFullPath, [StringComparison]::OrdinalIgnoreCase)
+
     $requiredSourceFiles = @(
         "SendToImageResizer.ps1",
         "presets.json",
@@ -67,10 +71,12 @@ try {
         "README.md",
         "THIRD_PARTY_NOTICES.md"
     )
-    foreach ($relativePath in $filesToCopy) {
-        $sourcePath = Join-Path $sourceDirectory $relativePath
-        if (Test-Path -LiteralPath $sourcePath -PathType Leaf) {
-            Copy-Item -LiteralPath $sourcePath -Destination (Join-Path $installDirectory $relativePath) -Force
+    if (-not $repairOnly) {
+        foreach ($relativePath in $filesToCopy) {
+            $sourcePath = Join-Path $sourceDirectory $relativePath
+            if (Test-Path -LiteralPath $sourcePath -PathType Leaf) {
+                Copy-Item -LiteralPath $sourcePath -Destination (Join-Path $installDirectory $relativePath) -Force
+            }
         }
     }
 
@@ -83,10 +89,15 @@ try {
     }
 
     $installedImageMagick = Join-Path $installDirectory "ImageMagick"
-    if (Test-Path -LiteralPath $installedImageMagick) {
-        Remove-Item -LiteralPath $installedImageMagick -Recurse -Force
+    if (-not $repairOnly) {
+        if (Test-Path -LiteralPath $installedImageMagick) {
+            Remove-Item -LiteralPath $installedImageMagick -Recurse -Force
+        }
+        Copy-Item -LiteralPath (Join-Path $sourceDirectory "ImageMagick") -Destination $installedImageMagick -Recurse
     }
-    Copy-Item -LiteralPath (Join-Path $sourceDirectory "ImageMagick") -Destination $installedImageMagick -Recurse
+    else {
+        Write-Host "Repairing shortcuts for the existing installation."
+    }
 
     $installedScript = Join-Path $installDirectory "SendToImageResizer.ps1"
     New-PowerShellShortcut -Path $sendToShortcut -ScriptPath $installedScript -Description "Resize images from a selected main folder"
@@ -112,4 +123,3 @@ catch {
     Write-Host $_.Exception.Message
     exit 1
 }
-
