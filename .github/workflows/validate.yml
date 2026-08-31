@@ -1,0 +1,39 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Validate project and bundled runtime
+        shell: powershell
+        run: .\Test-Project.ps1 -RequireImageMagick
+
+      - name: Run end-to-end image test
+        shell: powershell
+        run: .\Test-Integration.ps1
+
+      - name: Test per-user install and uninstall
+        shell: powershell
+        run: |
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Install.ps1 failed." }
+          $installDirectory = Join-Path $env:LOCALAPPDATA "SendToImageResizer"
+          $sendToShortcut = Join-Path $env:APPDATA "Microsoft\Windows\SendTo\Image Resizer.lnk"
+          if (-not (Test-Path (Join-Path $installDirectory "SendToImageResizer.ps1"))) { throw "Installed application is missing." }
+          if (-not (Test-Path $sendToShortcut)) { throw "SendTo shortcut is missing." }
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Uninstall.ps1 -Force
+          if ($LASTEXITCODE -ne 0) { throw "Uninstall.ps1 failed." }
+          if (Test-Path $installDirectory) { throw "Install directory was not removed." }
+          if (Test-Path $sendToShortcut) { throw "SendTo shortcut was not removed." }

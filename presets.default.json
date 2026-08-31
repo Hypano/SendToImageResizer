@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "supportedExtensions": [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp"
+  ],
+  "presets": [
+    {
+      "name": "Compress (copy)",
+      "mode": "none",
+      "value": 0,
+      "quality": 70,
+      "autoOrient": false,
+      "operation": "copy",
+      "copySuffix": "_resized",
+      "overwriteCopy": false,
+      "recursive": true,
+      "preserveTimestamps": true
+    },
+    {
+      "name": "Compress (replace original)",
+      "mode": "none",
+      "value": 0,
+      "quality": 70,
+      "autoOrient": false,
+      "operation": "replace",
+      "copySuffix": "_resized",
+      "overwriteCopy": false,
+      "recursive": true,
+      "preserveTimestamps": true
+    },
+    {
+      "name": "Resize to 50%",
+      "mode": "percent",
+      "value": 50,
+      "quality": 80,
+      "autoOrient": false,
+      "operation": "copy",
+      "copySuffix": "_50pct",
+      "overwriteCopy": false,
+      "recursive": true,
+      "preserveTimestamps": true
+    },
+    {
+      "name": "Resize to 1920 px",
+      "mode": "fit",
+      "value": 1920,
+      "quality": 80,
+      "autoOrient": false,
+      "operation": "copy",
+      "copySuffix": "_1920px",
+      "overwriteCopy": false,
+      "recursive": true,
+      "preserveTimestamps": true
+    },
+    {
+      "name": "Resize to 1280 px",
+      "mode": "fit",
+      "value": 1280,
+      "quality": 80,
+      "autoOrient": false,
+      "operation": "copy",
+      "copySuffix": "_1280px",
+      "overwriteCopy": false,
+      "recursive": true,
+      "preserveTimestamps": true
+    },
+    {
+      "name": "Resize to 800 px",
+      "mode": "fit",
+      "value": 800,
+      "quality": 75,
+      "autoOrient": false,
+      "operation": "copy",
+      "copySuffix": "_800px",
+      "overwriteCopy": false,
+      "recursive": true,
+      "preserveTimestamps": true
+    }
+  ]
+}
+
