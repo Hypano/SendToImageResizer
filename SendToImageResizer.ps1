@@ -1,5 +1,8 @@
 [CmdletBinding()]
 param(
+    [string]$PresetName,
+    [string]$MainFolder,
+    [switch]$AllowReplace,
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$InputPaths
 )
@@ -328,22 +331,26 @@ function Invoke-Preset {
     param(
         [Parameter(Mandatory = $true)][string]$Folder,
         [Parameter(Mandatory = $true)]$Config,
-        [Parameter(Mandatory = $true)]$Preset
+        [Parameter(Mandatory = $true)]$Preset,
+        [switch]$NonInteractive,
+        [switch]$AllowReplace
     )
 
     if (-not (Test-Path -LiteralPath $script:MagickPath -PathType Leaf)) {
+        if ($NonInteractive) { throw "ImageMagick is incomplete. Missing: $script:MagickPath" }
         Write-Host "ImageMagick is incomplete." -ForegroundColor Red
         Write-Host "Missing: $script:MagickPath"
         Write-Host "Run Install.cmd again from a complete release package."
         Pause-Menu
-        return
+        return $false
     }
 
     $files = @(Get-ImageFiles -Folder $Folder -Config $Config -Preset $Preset)
     if ($files.Count -eq 0) {
+        if ($NonInteractive) { throw "No supported images were found." }
         Write-Host "No supported images were found." -ForegroundColor Yellow
         Pause-Menu
-        return
+        return $false
     }
 
     $operation = ([string](Get-PropertyValue -Object $Preset -Name "operation" -Default "copy")).ToLowerInvariant()
@@ -353,10 +360,15 @@ function Invoke-Preset {
     Write-Host ("Output : {0}" -f $(if ($operation -eq "replace") { "Replace originals" } else { "Create copies" }))
 
     if ($operation -eq "replace") {
+        if ($NonInteractive -and -not $AllowReplace) {
+            throw "A non-interactive replace operation requires -AllowReplace."
+        }
         Write-Host
         Write-Host "This preset replaces the original files." -ForegroundColor Yellow
-        $confirmation = Read-Host "Type YES to continue"
-        if ($confirmation -cne "YES") { return }
+        if (-not $NonInteractive) {
+            $confirmation = Read-Host "Type YES to continue"
+            if ($confirmation -cne "YES") { return $false }
+        }
     }
 
     $success = 0
@@ -406,7 +418,8 @@ function Invoke-Preset {
         }
     }
 
-    Pause-Menu
+    if (-not $NonInteractive) { Pause-Menu }
+    return ($failed -eq 0)
 }
 
 function Read-TextValue {
@@ -651,20 +664,36 @@ function Show-MainMenu {
                 Pause-Menu
                 continue
             }
-            Invoke-Preset -Folder $folder -Config $config -Preset $presets[$number - 1]
+            [void](Invoke-Preset -Folder $folder -Config $config -Preset $presets[$number - 1])
         }
     }
 }
 
 try {
-    Show-MainMenu
-    exit 0
+    if (-not [string]::IsNullOrWhiteSpace($PresetName)) {
+        if ([string]::IsNullOrWhiteSpace($MainFolder) -or -not (Test-Path -LiteralPath $MainFolder -PathType Container)) {
+            throw "-MainFolder must point to an existing folder."
+        }
+        $config = Read-Config
+        $matchingPresets = @($config.presets | Where-Object { $_.name -eq $PresetName })
+        if ($matchingPresets.Count -ne 1) {
+            throw "Preset '$PresetName' was not found or is not unique."
+        }
+        $completed = Invoke-Preset -Folder $MainFolder -Config $config -Preset $matchingPresets[0] -NonInteractive -AllowReplace:$AllowReplace
+        if ($completed) { exit 0 } else { exit 1 }
+    }
+    else {
+        Show-MainMenu
+        exit 0
+    }
 }
 catch {
     Write-Host
     Write-Host "Fatal error:" -ForegroundColor Red
     Write-Host $_.Exception.Message
     Write-Host
-    [void](Read-Host "Press Enter to close")
+    if ([string]::IsNullOrWhiteSpace($PresetName)) {
+        [void](Read-Host "Press Enter to close")
+    }
     exit 1
 }

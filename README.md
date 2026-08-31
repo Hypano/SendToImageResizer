@@ -92,6 +92,18 @@ Supported operations:
 
 Preset values and names are read directly from `presets.json` whenever the menu is displayed. Changes therefore take effect immediately; no shortcut synchronization or reinstallation is needed.
 
+### Optional non-interactive use
+
+The same processing path can be called from scripts by using the exact preset name:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\SendToImageResizer.ps1 `
+  -PresetName "Resize to 1920 px" `
+  -MainFolder "C:\Images"
+```
+
+A non-interactive preset that replaces originals additionally requires `-AllowReplace` as an explicit safety switch.
+
 ## Safe replacement
 
 For a `replace` preset, every image is processed as follows:
@@ -140,4 +152,3 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Test-Project.ps1 -Requ
 ## License
 
 SendToImageResizer is licensed under the MIT License. Bundled third-party components retain their own licenses.
-

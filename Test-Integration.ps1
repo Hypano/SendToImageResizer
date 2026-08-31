@@ -19,38 +19,15 @@ try {
     }
 
     $powerShell = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
-    $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-    $startInfo.FileName = $powerShell
-    $escapedApp = $app.Replace('"', '\"')
-    $escapedDirectory = $testDirectory.Replace('"', '\"')
-    $startInfo.Arguments = ('-NoProfile -ExecutionPolicy Bypass -STA -File "{0}" "{1}"' -f $escapedApp, $escapedDirectory)
-    $startInfo.UseShellExecute = $false
-    $startInfo.RedirectStandardInput = $true
-    $startInfo.RedirectStandardOutput = $true
-    $startInfo.RedirectStandardError = $true
-    $startInfo.CreateNoWindow = $true
-
-    $process = New-Object System.Diagnostics.Process
-    $process.StartInfo = $startInfo
-    if (-not $process.Start()) { throw "Could not start SendToImageResizer." }
-
-    $process.StandardInput.WriteLine("3")
-    $process.StandardInput.WriteLine("")
-    $process.StandardInput.WriteLine("Q")
-    $process.StandardInput.Close()
-
-    $standardOutput = $process.StandardOutput.ReadToEnd()
-    $standardError = $process.StandardError.ReadToEnd()
-    $process.WaitForExit()
-
-    if ($process.ExitCode -ne 0) {
-        throw "SendToImageResizer exited with code $($process.ExitCode). Output: $standardOutput Error: $standardError"
+    $appOutput = @(& $powerShell -NoProfile -ExecutionPolicy Bypass -STA -File $app -PresetName "Resize to 50%" -MainFolder $testDirectory 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+        throw "SendToImageResizer exited with code $LASTEXITCODE. Output: $($appOutput -join ' ')"
     }
     if (-not (Test-Path -LiteralPath $sourceImage -PathType Leaf)) {
         throw "The copy preset removed the source image."
     }
     if (-not (Test-Path -LiteralPath $outputImage -PathType Leaf)) {
-        throw "The expected copy was not created. Output: $standardOutput Error: $standardError"
+        throw "The expected copy was not created. Output: $($appOutput -join ' ')"
     }
 
     $dimensions = (& $magick identify -format "%wx%h" $outputImage).Trim()
