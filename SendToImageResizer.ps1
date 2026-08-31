@@ -180,7 +180,8 @@ function Get-ImageFiles {
     if ($recursive) { $parameters.Recurse = $true }
 
     $files = @(Get-ChildItem @parameters | Where-Object {
-        $extensions -contains $_.Extension.ToLowerInvariant()
+        ($extensions -contains $_.Extension.ToLowerInvariant()) -and
+        (-not $_.BaseName.StartsWith(".stir-", [StringComparison]::OrdinalIgnoreCase))
     })
 
     if (([string](Get-PropertyValue -Object $Preset -Name "operation" -Default "copy")) -eq "copy") {
