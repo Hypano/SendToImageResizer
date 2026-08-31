@@ -18,3 +18,7 @@ jobs:
       - name: Validate project and bundled runtime
         shell: powershell
         run: .\Test-Project.ps1 -RequireImageMagick
+
+      - name: Run end-to-end image test
+        shell: powershell
+        run: .\Test-Integration.ps1

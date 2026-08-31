@@ -27,6 +27,7 @@ $requiredFiles = @(
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md"
+    "Test-Integration.ps1"
 )
 
 foreach ($relativePath in $requiredFiles) {
@@ -37,7 +38,7 @@ foreach ($relativePath in $requiredFiles) {
 
 $tokens = $null
 $parseErrors = $null
-foreach ($scriptName in @("SendToImageResizer.ps1", "Install.ps1", "Uninstall.ps1", "Test-Project.ps1")) {
+foreach ($scriptName in @("SendToImageResizer.ps1", "Install.ps1", "Uninstall.ps1", "Test-Project.ps1", "Test-Integration.ps1")) {
     $scriptPath = Join-Path $PSScriptRoot $scriptName
     if (-not (Test-Path -LiteralPath $scriptPath -PathType Leaf)) { continue }
     $tokens = $null
