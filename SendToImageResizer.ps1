@@ -393,7 +393,7 @@ function Invoke-Preset {
             "Skipped" { $skipped++ }
             default {
                 $failed++
-                $failures.Add([pscustomobject]@{ File = $file.FullName; Error = $result.Message })
+                [void]$failures.Add([pscustomobject]@{ File = $file.FullName; Error = $result.Message })
             }
         }
     }
