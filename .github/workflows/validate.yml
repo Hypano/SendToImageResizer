@@ -24,6 +24,17 @@ jobs:
         shell: powershell
         run: .\Test-Integration.ps1
 
+      - name: Build and verify release package
+        shell: powershell
+        run: .\Build-Release.ps1 -OutputDirectory (Join-Path $env:RUNNER_TEMP "release")
+
+      - name: Test latest-release installer from temporary files
+        shell: cmd
+        env:
+          STIR_PACKAGE_PATH: ${{ runner.temp }}\release\SendToImageResizer.zip
+          STIR_NO_PAUSE: 1
+        run: Install-Latest.cmd
+
       - name: Test per-user install and uninstall
         shell: powershell
         run: |

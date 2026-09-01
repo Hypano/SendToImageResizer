@@ -32,7 +32,11 @@ The application processes the folder itself instead of passing hundreds of indiv
 
 ## Installation
 
-Download or extract a complete package, then run:
+Download **Install-Latest.cmd** from the [latest GitHub release](https://github.com/Hypano/SendToImageResizer/releases/latest) and run it.
+
+The download installer retrieves the matching `SendToImageResizer.zip`, extracts it into a randomly named directory below `%TEMP%`, installs the application and removes the ZIP and extracted temporary files afterward. Only the installed application remains in `%LOCALAPPDATA%`.
+
+Alternatively, download and extract `SendToImageResizer.zip` yourself, then run:
 
 ```text
 Install.cmd
@@ -53,6 +57,16 @@ and creates:
 No administrator rights are required.
 
 When reinstalling or updating, locally edited presets are retained. Updated factory defaults are installed separately and are only applied when you explicitly reset the presets.
+
+## Creating a release
+
+Releases are created manually:
+
+1. Update `VERSION.txt` and merge the intended release state into `main`.
+2. Open **Actions → Create Release → Run workflow**.
+3. Enter the exact version from `VERSION.txt`, for example `1.0.1`.
+
+The workflow validates the version, runs the end-to-end test, builds and verifies `SendToImageResizer.zip`, and publishes it together with `Install-Latest.cmd`. The fixed ZIP filename lets the installer always retrieve the latest published version.
 
 ## Presets
 

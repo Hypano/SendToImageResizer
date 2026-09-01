@@ -1,0 +1,47 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version from VERSION.txt (for example 1.0.1)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Validate requested version
+        shell: powershell
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          if ($env:RELEASE_VERSION -notmatch '^\d+\.\d+\.\d+$') { throw "Version must use the format 1.2.3." }
+          $projectVersion = (Get-Content -LiteralPath .\VERSION.txt -Raw).Trim()
+          if ($projectVersion -ne $env:RELEASE_VERSION) {
+            throw "Requested version $($env:RELEASE_VERSION) does not match VERSION.txt ($projectVersion)."
+          }
+
+      - name: Run end-to-end image test
+        shell: powershell
+        run: .\Test-Integration.ps1
+
+      - name: Build and verify release package
+        shell: powershell
+        run: .\Build-Release.ps1 -OutputDirectory (Join-Path $env:RUNNER_TEMP "release")
+
+      - name: Publish GitHub release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          $zipPath = Join-Path $env:RUNNER_TEMP "release\SendToImageResizer.zip"
+          gh release create "v$($env:RELEASE_VERSION)" $zipPath .\Install-Latest.cmd --title "SendToImageResizer v$($env:RELEASE_VERSION)" --generate-notes --latest
