@@ -16,7 +16,7 @@
       "operation": "copy",
       "copySuffix": "_resized",
       "overwriteCopy": false,
-      "recursive": true,
+      "recursive": false,
       "preserveTimestamps": true
     },
     {
@@ -28,7 +28,7 @@
       "operation": "replace",
       "copySuffix": "_resized",
       "overwriteCopy": false,
-      "recursive": true,
+      "recursive": false,
       "preserveTimestamps": true
     },
     {
@@ -40,7 +40,7 @@
       "operation": "copy",
       "copySuffix": "_50pct",
       "overwriteCopy": false,
-      "recursive": true,
+      "recursive": false,
       "preserveTimestamps": true
     },
     {
@@ -52,7 +52,7 @@
       "operation": "copy",
       "copySuffix": "_1920px",
       "overwriteCopy": false,
-      "recursive": true,
+      "recursive": false,
       "preserveTimestamps": true
     },
     {
@@ -64,7 +64,7 @@
       "operation": "copy",
       "copySuffix": "_1280px",
       "overwriteCopy": false,
-      "recursive": true,
+      "recursive": false,
       "preserveTimestamps": true
     },
     {
@@ -76,9 +76,8 @@
       "operation": "copy",
       "copySuffix": "_800px",
       "overwriteCopy": false,
-      "recursive": true,
+      "recursive": false,
       "preserveTimestamps": true
     }
   ]
 }
-

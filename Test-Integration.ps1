@@ -35,7 +35,20 @@ try {
         throw "Expected 2000x1500 pixels, got '$dimensions'."
     }
 
-    Write-Host "Integration test passed: 4000x3000 -> 2000x1500 copy." -ForegroundColor Green
+    $replaceDirectory = Join-Path $testDirectory "replace-case"
+    New-Item -ItemType Directory -Path $replaceDirectory | Out-Null
+    $replaceImage = Join-Path $replaceDirectory "replace me.jpg"
+    & $magick -size "640x480" "gradient:#111111-#eeeeee" -quality 95 $replaceImage
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $replaceImage -PathType Leaf)) {
+        throw "Could not create the replace-test image."
+    }
+
+    $replaceOutput = @(& $powerShell -NoProfile -ExecutionPolicy Bypass -STA -File $app -PresetName "Compress (replace original)" -MainFolder $replaceDirectory 2>&1)
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $replaceImage -PathType Leaf)) {
+        throw "Replace preset failed without confirmation. Output: $($replaceOutput -join ' ')"
+    }
+
+    Write-Host "Integration test passed: copy resize and direct safe replacement." -ForegroundColor Green
     exit 0
 }
 catch {
