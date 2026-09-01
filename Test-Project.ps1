@@ -66,6 +66,7 @@ foreach ($configName in @("presets.json", "presets.default.json")) {
             if ([string]$preset.mode -eq "percent" -and ([int]$preset.value -lt 1 -or [int]$preset.value -gt 100)) { Add-ValidationError "$configName contains an invalid percentage." }
             if ([string]$preset.mode -eq "fit" -and [int]$preset.value -lt 1) { Add-ValidationError "$configName contains an invalid pixel size." }
             if ([string]$preset.operation -eq "copy" -and [string]::IsNullOrWhiteSpace([string]$preset.copySuffix)) { Add-ValidationError "$configName contains a copy preset without a suffix." }
+            if ($configName -eq "presets.default.json" -and [bool]$preset.recursive) { Add-ValidationError "$configName must disable recursive processing by default." }
         }
     }
     catch {

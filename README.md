@@ -56,7 +56,7 @@ When reinstalling or updating, locally edited presets are retained. Updated fact
 
 ## Presets
 
-Presets are stored in `presets.json`. Use **E - Edit presets** in the application to manage them without editing JSON manually. The editor also offers an option to open the JSON in Notepad.
+Presets are stored in `presets.json`. Use **C - Configure presets** in the application to manage them without editing JSON manually. The editor also offers an option to open the JSON in Notepad.
 
 Example:
 
@@ -70,7 +70,7 @@ Example:
   "operation": "copy",
   "copySuffix": "_1920px",
   "overwriteCopy": false,
-  "recursive": true,
+  "recursive": false,
   "preserveTimestamps": true
 }
 ```
@@ -102,7 +102,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\SendToImageResizer.ps1
   -MainFolder "C:\Images"
 ```
 
-A non-interactive preset that replaces originals additionally requires `-AllowReplace` as an explicit safety switch.
+Replace presets run directly because the operation is already explicit in the preset configuration. The safe backup workflow is used in both interactive and non-interactive mode.
 
 ## Safe replacement
 

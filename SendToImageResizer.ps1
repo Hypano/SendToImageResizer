@@ -2,7 +2,6 @@
 param(
     [string]$PresetName,
     [string]$MainFolder,
-    [switch]$AllowReplace,
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$InputPaths
 )
@@ -332,8 +331,7 @@ function Invoke-Preset {
         [Parameter(Mandatory = $true)][string]$Folder,
         [Parameter(Mandatory = $true)]$Config,
         [Parameter(Mandatory = $true)]$Preset,
-        [switch]$NonInteractive,
-        [switch]$AllowReplace
+        [switch]$NonInteractive
     )
 
     if (-not (Test-Path -LiteralPath $script:MagickPath -PathType Leaf)) {
@@ -358,18 +356,6 @@ function Invoke-Preset {
     Write-Host ("Preset : {0}" -f $Preset.name)
     Write-Host ("Images : {0}" -f $files.Count)
     Write-Host ("Output : {0}" -f $(if ($operation -eq "replace") { "Replace originals" } else { "Create copies" }))
-
-    if ($operation -eq "replace") {
-        if ($NonInteractive -and -not $AllowReplace) {
-            throw "A non-interactive replace operation requires -AllowReplace."
-        }
-        Write-Host
-        Write-Host "This preset replaces the original files." -ForegroundColor Yellow
-        if (-not $NonInteractive) {
-            $confirmation = Read-Host "Type YES to continue"
-            if ($confirmation -cne "YES") { return $false }
-        }
-    }
 
     $success = 0
     $skipped = 0
@@ -418,8 +404,17 @@ function Invoke-Preset {
         }
     }
 
-    if (-not $NonInteractive) { Pause-Menu }
-    return ($failed -eq 0)
+    $completedWithoutErrors = ($failed -eq 0)
+    if (-not $NonInteractive) {
+        if ($completedWithoutErrors) {
+            Write-Host
+            [void](Read-Host "Press Enter to close")
+        }
+        else {
+            Pause-Menu
+        }
+    }
+    return $completedWithoutErrors
 }
 
 function Read-TextValue {
@@ -477,7 +472,7 @@ function Read-PresetDefinition {
             operation = "copy"
             copySuffix = "_resized"
             overwriteCopy = $false
-            recursive = $true
+            recursive = $false
             preserveTimestamps = $true
         }
     }
@@ -502,7 +497,7 @@ function Read-PresetDefinition {
         } while (-not $suffixValid)
         $overwriteCopy = Read-BooleanValue -Label "Overwrite an existing copy" -Current $overwriteCopy
     }
-    $recursive = Read-BooleanValue -Label "Include subfolders" -Current ([bool](Get-PropertyValue -Object $CurrentPreset -Name "recursive" -Default $true))
+    $recursive = Read-BooleanValue -Label "Include subfolders" -Current ([bool](Get-PropertyValue -Object $CurrentPreset -Name "recursive" -Default $false))
     $preserveTimestamps = Read-BooleanValue -Label "Preserve timestamps" -Current ([bool](Get-PropertyValue -Object $CurrentPreset -Name "preserveTimestamps" -Default $true))
 
     $result = [pscustomobject][ordered]@{
@@ -626,7 +621,7 @@ function Show-MainMenu {
         try { $config = Read-Config }
         catch {
             Write-Host $_.Exception.Message -ForegroundColor Red
-            Write-Host "Use E to repair or reset the presets."
+            Write-Host "Use C to repair or reset the presets."
             $config = $null
         }
 
@@ -644,7 +639,7 @@ function Show-MainMenu {
 
         Write-Host
         Write-Host "F - Select main folder"
-        Write-Host "E - Edit presets"
+        Write-Host "C - Configure presets"
         Write-Host "Q - Quit"
         Write-Host
         $choice = (Read-Host "Select").Trim().TrimStart([char]0xFEFF)
@@ -654,7 +649,7 @@ function Show-MainMenu {
             if ($null -ne $selectedFolder) { $folder = $selectedFolder }
             continue
         }
-        if ($choice -match "^[eE]$") { Edit-Presets; continue }
+        if ($choice -match "^[cC]$") { Edit-Presets; continue }
         if ($choice -match "^[qQ]$") { return }
 
         $number = 0
@@ -664,7 +659,8 @@ function Show-MainMenu {
                 Pause-Menu
                 continue
             }
-            [void](Invoke-Preset -Folder $folder -Config $config -Preset $presets[$number - 1])
+            $completed = Invoke-Preset -Folder $folder -Config $config -Preset $presets[$number - 1]
+            if ($completed) { return }
         }
     }
 }
@@ -679,7 +675,7 @@ try {
         if ($matchingPresets.Count -ne 1) {
             throw "Preset '$PresetName' was not found or is not unique."
         }
-        $completed = Invoke-Preset -Folder $MainFolder -Config $config -Preset $matchingPresets[0] -NonInteractive -AllowReplace:$AllowReplace
+        $completed = Invoke-Preset -Folder $MainFolder -Config $config -Preset $matchingPresets[0] -NonInteractive
         if ($completed) { exit 0 } else { exit 1 }
     }
     else {
