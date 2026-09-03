@@ -20,7 +20,6 @@ $packageFiles = @(
     "Uninstall.ps1",
     "SendToImageResizer.cmd",
     "SendToImageResizer.ps1",
-    "SendToSelection.ps1",
     "presets.json",
     "presets.default.json",
     "VERSION.txt",

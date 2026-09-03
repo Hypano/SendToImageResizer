@@ -134,7 +134,27 @@ function Select-MainFolder {
     return $null
 }
 
-function Resolve-InitialFolder {
+function New-FolderSelection {
+    param([string]$Folder)
+
+    return [pscustomobject]@{
+        Mode = "Folder"
+        Folder = $Folder
+        Files = @()
+    }
+}
+
+function New-FileSelection {
+    param([System.IO.FileInfo[]]$Files)
+
+    return [pscustomobject]@{
+        Mode = "Files"
+        Folder = $null
+        Files = @($Files)
+    }
+}
+
+function Resolve-InitialSelection {
     param([string[]]$Paths)
 
     $validItems = @()
@@ -145,53 +165,60 @@ function Resolve-InitialFolder {
     }
 
     if ($validItems.Count -eq 1 -and $validItems[0].PSIsContainer) {
-        return $validItems[0].FullName
+        return (New-FolderSelection -Folder $validItems[0].FullName)
     }
 
     if ($validItems.Count -gt 0) {
-        $folders = @($validItems | ForEach-Object {
-            if ($_.PSIsContainer) { $_.FullName } else { $_.DirectoryName }
-        } | Select-Object -Unique)
-
-        if ($folders.Count -eq 1) {
-            Write-Host "Individual files were passed. Using their parent folder instead:" -ForegroundColor Yellow
-            Write-Host $folders[0]
-            Write-Host "For large batches, send the main folder to Image Resizer." -ForegroundColor Yellow
-            Start-Sleep -Seconds 2
-            return $folders[0]
+        $folders = @($validItems | Where-Object { $_.PSIsContainer })
+        if ($folders.Count -gt 0) {
+            throw "Select either one folder or one or more image files, not a mixed selection."
         }
+
+        return (New-FileSelection -Files @($validItems))
     }
 
-    return Select-MainFolder
+    if (@($Paths | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }).Count -gt 0) {
+        throw "None of the provided input paths exist."
+    }
+
+    return (New-FolderSelection -Folder (Select-MainFolder))
 }
 
 function Get-ImageFiles {
     param(
-        [Parameter(Mandatory = $true)][string]$Folder,
+        [Parameter(Mandatory = $true)]$Selection,
         [Parameter(Mandatory = $true)]$Config,
         [Parameter(Mandatory = $true)]$Preset
     )
 
     $extensions = @($Config.supportedExtensions | ForEach-Object { ([string]$_).ToLowerInvariant() })
-    $recursive = [bool](Get-PropertyValue -Object $Preset -Name "recursive" -Default $false)
-    $parameters = @{
-        LiteralPath = $Folder
-        File = $true
-        ErrorAction = "SilentlyContinue"
+    if ($Selection.Mode -eq "Files") {
+        $files = @($Selection.Files | Where-Object {
+            ($extensions -contains $_.Extension.ToLowerInvariant()) -and
+            (-not $_.BaseName.StartsWith(".stir-", [StringComparison]::OrdinalIgnoreCase))
+        })
     }
-    if ($recursive) { $parameters.Recurse = $true }
+    else {
+        $recursive = [bool](Get-PropertyValue -Object $Preset -Name "recursive" -Default $false)
+        $parameters = @{
+            LiteralPath = $Selection.Folder
+            File = $true
+            ErrorAction = "SilentlyContinue"
+        }
+        if ($recursive) { $parameters.Recurse = $true }
 
-    $files = @(Get-ChildItem @parameters | Where-Object {
-        ($extensions -contains $_.Extension.ToLowerInvariant()) -and
-        (-not $_.BaseName.StartsWith(".stir-", [StringComparison]::OrdinalIgnoreCase))
-    })
+        $files = @(Get-ChildItem @parameters | Where-Object {
+            ($extensions -contains $_.Extension.ToLowerInvariant()) -and
+            (-not $_.BaseName.StartsWith(".stir-", [StringComparison]::OrdinalIgnoreCase))
+        })
+    }
 
     if (([string](Get-PropertyValue -Object $Preset -Name "operation" -Default "copy")) -eq "copy") {
         $suffix = [string](Get-PropertyValue -Object $Preset -Name "copySuffix" -Default "_resized")
         $files = @($files | Where-Object { -not $_.BaseName.EndsWith($suffix, [StringComparison]::OrdinalIgnoreCase) })
     }
 
-    return @($files | Sort-Object FullName)
+    return @($files | Sort-Object FullName -Unique)
 }
 
 function Set-FileTimestamps {
@@ -328,7 +355,7 @@ function Invoke-ImageResize {
 
 function Invoke-Preset {
     param(
-        [Parameter(Mandatory = $true)][string]$Folder,
+        [Parameter(Mandatory = $true)]$Selection,
         [Parameter(Mandatory = $true)]$Config,
         [Parameter(Mandatory = $true)]$Preset,
         [switch]$NonInteractive
@@ -343,7 +370,7 @@ function Invoke-Preset {
         return $false
     }
 
-    $files = @(Get-ImageFiles -Folder $Folder -Config $Config -Preset $Preset)
+    $files = @(Get-ImageFiles -Selection $Selection -Config $Config -Preset $Preset)
     if ($files.Count -eq 0) {
         if ($NonInteractive) { throw "No supported images were found." }
         Write-Host "No supported images were found." -ForegroundColor Yellow
@@ -605,16 +632,21 @@ function Edit-Presets {
 }
 
 function Show-MainMenu {
-    $folder = Resolve-InitialFolder -Paths $InputPaths
+    $selection = Resolve-InitialSelection -Paths $InputPaths
 
     while ($true) {
         Write-Title
-        Write-Host "Main folder:" -ForegroundColor DarkCyan
-        if ([string]::IsNullOrWhiteSpace($folder)) {
-            Write-Host "Not selected" -ForegroundColor Yellow
+        if ($selection.Mode -eq "Files") {
+            Write-Host ("Selected files: {0}" -f $selection.Files.Count) -ForegroundColor DarkCyan
         }
         else {
-            Write-Host $folder
+            Write-Host "Main folder:" -ForegroundColor DarkCyan
+            if ([string]::IsNullOrWhiteSpace($selection.Folder)) {
+                Write-Host "Not selected" -ForegroundColor Yellow
+            }
+            else {
+                Write-Host $selection.Folder
+            }
         }
         Write-Host
 
@@ -645,8 +677,9 @@ function Show-MainMenu {
         $choice = (Read-Host "Select").Trim().TrimStart([char]0xFEFF)
 
         if ($choice -match "^[fF]$") {
-            $selectedFolder = Select-MainFolder -InitialDirectory $folder
-            if ($null -ne $selectedFolder) { $folder = $selectedFolder }
+            $initialDirectory = $(if ($selection.Mode -eq "Folder") { $selection.Folder } else { $selection.Files[0].DirectoryName })
+            $selectedFolder = Select-MainFolder -InitialDirectory $initialDirectory
+            if ($null -ne $selectedFolder) { $selection = New-FolderSelection -Folder $selectedFolder }
             continue
         }
         if ($choice -match "^[cC]$") { Edit-Presets; continue }
@@ -654,12 +687,12 @@ function Show-MainMenu {
 
         $number = 0
         if ([int]::TryParse($choice, [ref]$number) -and $number -ge 1 -and $number -le $presets.Count) {
-            if ([string]::IsNullOrWhiteSpace($folder) -or -not (Test-Path -LiteralPath $folder -PathType Container)) {
+            if ($selection.Mode -eq "Folder" -and ([string]::IsNullOrWhiteSpace($selection.Folder) -or -not (Test-Path -LiteralPath $selection.Folder -PathType Container))) {
                 Write-Host "Select a main folder first." -ForegroundColor Yellow
                 Pause-Menu
                 continue
             }
-            $completed = Invoke-Preset -Folder $folder -Config $config -Preset $presets[$number - 1]
+            $completed = Invoke-Preset -Selection $selection -Config $config -Preset $presets[$number - 1]
             if ($completed) { return }
         }
     }
@@ -667,15 +700,30 @@ function Show-MainMenu {
 
 try {
     if (-not [string]::IsNullOrWhiteSpace($PresetName)) {
-        if ([string]::IsNullOrWhiteSpace($MainFolder) -or -not (Test-Path -LiteralPath $MainFolder -PathType Container)) {
-            throw "-MainFolder must point to an existing folder."
+        if (-not [string]::IsNullOrWhiteSpace($MainFolder)) {
+            if (-not (Test-Path -LiteralPath $MainFolder -PathType Container)) {
+                throw "-MainFolder must point to an existing folder."
+            }
+            if (@($InputPaths).Count -gt 0) {
+                throw "Use either -MainFolder or individual input paths, not both."
+            }
+            $selection = New-FolderSelection -Folder (Get-Item -LiteralPath $MainFolder).FullName
+        }
+        else {
+            if (@($InputPaths).Count -eq 0) {
+                throw "Provide -MainFolder or one or more individual input paths."
+            }
+            $selection = Resolve-InitialSelection -Paths $InputPaths
+            if ($selection.Mode -ne "Files") {
+                throw "Individual input paths must point to files. Use -MainFolder for a folder."
+            }
         }
         $config = Read-Config
         $matchingPresets = @($config.presets | Where-Object { $_.name -eq $PresetName })
         if ($matchingPresets.Count -ne 1) {
             throw "Preset '$PresetName' was not found or is not unique."
         }
-        $completed = Invoke-Preset -Folder $MainFolder -Config $config -Preset $matchingPresets[0] -NonInteractive
+        $completed = Invoke-Preset -Selection $selection -Config $config -Preset $matchingPresets[0] -NonInteractive
         if ($completed) { exit 0 } else { exit 1 }
     }
     else {

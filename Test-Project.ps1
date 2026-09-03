@@ -16,7 +16,6 @@ function Add-ValidationError {
 
 $requiredFiles = @(
     "SendToImageResizer.ps1",
-    "SendToSelection.ps1",
     "SendToImageResizer.cmd",
     "Install.ps1",
     "Install.cmd",
@@ -41,7 +40,7 @@ foreach ($relativePath in $requiredFiles) {
 
 $tokens = $null
 $parseErrors = $null
-foreach ($scriptName in @("SendToImageResizer.ps1", "SendToSelection.ps1", "Install.ps1", "Uninstall.ps1", "Test-Project.ps1", "Test-Integration.ps1", "Build-Release.ps1")) {
+foreach ($scriptName in @("SendToImageResizer.ps1", "Install.ps1", "Uninstall.ps1", "Test-Project.ps1", "Test-Integration.ps1", "Build-Release.ps1")) {
     $scriptPath = Join-Path $PSScriptRoot $scriptName
     if (-not (Test-Path -LiteralPath $scriptPath -PathType Leaf)) { continue }
     $tokens = $null
@@ -83,6 +82,13 @@ foreach ($fileName in $imageMagickFiles) {
     if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot $relativePath) -PathType Leaf)) {
         if ($RequireImageMagick) { Add-ValidationError "Missing bundled runtime file: $relativePath" }
         else { $warnings.Add("Missing bundled runtime file: $relativePath") }
+    }
+}
+
+$unusedImageMagickExecutables = @("compare.exe", "composite.exe", "conjure.exe", "identify.exe", "mogrify.exe", "montage.exe", "stream.exe")
+foreach ($fileName in $unusedImageMagickExecutables) {
+    if (Test-Path -LiteralPath (Join-Path $PSScriptRoot "ImageMagick\$fileName") -PathType Leaf) {
+        Add-ValidationError "Unused ImageMagick executable must not be bundled: ImageMagick\$fileName"
     }
 }
 

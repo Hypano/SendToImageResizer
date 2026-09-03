@@ -6,17 +6,25 @@ No background service, no shell extension, no administrator rights and no update
 
 ## How it works
 
-1. Right-click the main folder that contains your images.
-2. Choose **Send to → Image Resizer**.
-3. Select a preset from the console menu.
+1. Select one or more individual images, or select one folder that contains your images.
+2. Right-click the selection.
+3. Choose **Send to → Image Resizer**.
+4. Select a preset from the console menu.
+
+When individual files are sent, only those exact files are processed. When one folder is sent, the application processes the supported images in that folder and optionally its subfolders.
 
 You can also start **Image Resizer** from the Start menu and select a main folder there.
 
-The application processes the folder itself instead of passing hundreds of individual file paths through the Windows command line. This avoids the command-line length limit that can break large selections. Individual files are accepted for convenience, but selecting their common parent folder is recommended.
+### Large individual selections
+
+Windows Explorer passes individually selected file paths to the application in one command line. The Windows command line is limited to 32,767 characters, so there is no fixed image-count limit: the practical limit depends on the length of the folder and file names. For example, a few hundred files with moderately long paths may fit while fewer files with very long paths may not.
+
+If Windows displays **The filename or extension is too long**, the application has not started yet and cannot replace that system message. Send the common parent folder to **Image Resizer** instead. Folder processing does not pass every contained file path through the Windows command line.
 
 ## Features
 
 - One stable SendTo shortcut
+- Process exactly the selected files or all supported images in one selected folder
 - Interactive console menu
 - Presets are loaded fresh before every operation
 - Built-in preset editor: create, edit, delete or reset presets
@@ -108,12 +116,21 @@ Preset values and names are read directly from `presets.json` whenever the menu 
 
 ### Optional non-interactive use
 
-The same processing path can be called from scripts by using the exact preset name:
+The same processing path can be called from scripts by using the exact preset name and a folder:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\SendToImageResizer.ps1 `
   -PresetName "Resize to 1920 px" `
   -MainFolder "C:\Images"
+```
+
+Or pass exact individual files as positional arguments:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\SendToImageResizer.ps1 `
+  -PresetName "Resize to 1920 px" `
+  "C:\Images\First image.jpg" `
+  "C:\Images\Second image.png"
 ```
 
 Replace presets run directly because the operation is already explicit in the preset configuration. The safe backup workflow is used in both interactive and non-interactive mode.
@@ -135,7 +152,7 @@ If a step fails, the original is restored whenever possible and the failure is s
 
 The project is designed for the bundled **ImageMagick 7.1.2-21 portable Q8 x64** build. It deliberately does not download or update ImageMagick. This keeps image processing reproducible and allows the tool to work offline.
 
-The complete `ImageMagick` directory must contain at least `magick.exe`, `LICENSE.txt` and `NOTICE.txt`. Installation stops with a clear error if the package is incomplete.
+The bundled `ImageMagick` directory contains `magick.exe`, its configuration resources and the required license files. The separate legacy utility executables are not needed because the application invokes all operations through `magick.exe`. Installation stops with a clear error if the required runtime files are missing.
 
 ImageMagick is distributed under the ImageMagick License. See `ImageMagick/LICENSE.txt`, `ImageMagick/NOTICE.txt` and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
