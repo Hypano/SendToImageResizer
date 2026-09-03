@@ -15,7 +15,7 @@ The application is installed for the current user in `%LOCALAPPDATA%\SendToImage
 ## Usage
 
 1. Select one or more image files, or one folder containing images.
-2. Right-click the selection.
+2. Right-click the selection. If needed, choose **Show more options**.
 3. Choose **Send to → Image Resizer**.
 4. Select a preset.
 
@@ -41,7 +41,29 @@ Presets support:
 - Optional subfolder processing, automatic orientation and timestamp preservation
 - JPG, JPEG, PNG and WebP files
 
-When replacing an original, the new image is created and validated first. The original is only moved to the Recycle Bin after the replacement succeeds.
+When using a `replace` preset, the new image is created and validated first. The original file is then moved to the Windows Recycle Bin as a recoverable backup.
+
+## Command-line use
+
+The menu can be skipped by passing an exact preset name from PowerShell.
+
+Process a folder:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\SendToImageResizer.ps1 `
+  -PresetName "Resize to 1920 px" `
+  -MainFolder "C:\Images"
+```
+
+Process only specific files:
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\SendToImageResizer.ps1 `
+  -PresetName "Resize to 1920 px" `
+  "C:\Images\First image.jpg" `
+  "C:\Images\Second image.png"
+```
+
+A replace preset runs immediately without confirmation in this mode.
 
 ## Uninstall
 
