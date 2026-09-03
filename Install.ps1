@@ -38,6 +38,7 @@ try {
 
     $requiredSourceFiles = @(
         "SendToImageResizer.ps1",
+        "SendToSelection.ps1",
         "presets.json",
         "presets.default.json",
         "VERSION.txt",
@@ -60,6 +61,7 @@ try {
 
     $filesToCopy = @(
         "SendToImageResizer.ps1",
+        "SendToSelection.ps1",
         "SendToImageResizer.cmd",
         "Install.ps1",
         "Install.cmd",
@@ -100,7 +102,8 @@ try {
     }
 
     $installedScript = Join-Path $installDirectory "SendToImageResizer.ps1"
-    New-PowerShellShortcut -Path $sendToShortcut -ScriptPath $installedScript -Description "Resize images from a selected main folder"
+    $installedSendToScript = Join-Path $installDirectory "SendToSelection.ps1"
+    New-PowerShellShortcut -Path $sendToShortcut -ScriptPath $installedSendToScript -Description "Resize exactly the selected images or a selected folder"
     New-PowerShellShortcut -Path $startMenuShortcut -ScriptPath $installedScript -Description "Open SendToImageResizer"
 
     $shell = New-Object -ComObject WScript.Shell
