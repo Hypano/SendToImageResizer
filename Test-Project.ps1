@@ -85,6 +85,13 @@ foreach ($fileName in $imageMagickFiles) {
     }
 }
 
+$unusedImageMagickExecutables = @("compare.exe", "composite.exe", "conjure.exe", "identify.exe", "mogrify.exe", "montage.exe", "stream.exe")
+foreach ($fileName in $unusedImageMagickExecutables) {
+    if (Test-Path -LiteralPath (Join-Path $PSScriptRoot "ImageMagick\$fileName") -PathType Leaf) {
+        Add-ValidationError "Unused ImageMagick executable must not be bundled: ImageMagick\$fileName"
+    }
+}
+
 if ($RequireImageMagick -and (Test-Path -LiteralPath (Join-Path $PSScriptRoot "ImageMagick\magick.exe") -PathType Leaf)) {
     try {
         $versionOutput = @(& (Join-Path $PSScriptRoot "ImageMagick\magick.exe") -version 2>&1)

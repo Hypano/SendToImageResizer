@@ -100,7 +100,7 @@ try {
     }
 
     $installedScript = Join-Path $installDirectory "SendToImageResizer.ps1"
-    New-PowerShellShortcut -Path $sendToShortcut -ScriptPath $installedScript -Description "Resize images from a selected main folder"
+    New-PowerShellShortcut -Path $sendToShortcut -ScriptPath $installedScript -Description "Resize exactly the selected images or a selected folder"
     New-PowerShellShortcut -Path $startMenuShortcut -ScriptPath $installedScript -Description "Open SendToImageResizer"
 
     $shell = New-Object -ComObject WScript.Shell
