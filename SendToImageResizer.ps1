@@ -704,9 +704,6 @@ try {
             if (-not (Test-Path -LiteralPath $MainFolder -PathType Container)) {
                 throw "-MainFolder must point to an existing folder."
             }
-            if (@($InputPaths).Count -gt 0) {
-                throw "Use either -MainFolder or individual input paths, not both."
-            }
             $selection = New-FolderSelection -Folder (Get-Item -LiteralPath $MainFolder).FullName
         }
         else {
