@@ -24,7 +24,6 @@ $requiredFiles = @(
     "Uninstall.cmd",
     "presets.json",
     "presets.default.json",
-    "VERSION.txt",
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
@@ -76,7 +75,7 @@ foreach ($configName in @("presets.json", "presets.default.json")) {
     }
 }
 
-$imageMagickFiles = @("magick.exe", "LICENSE.txt", "NOTICE.txt")
+$imageMagickFiles = @("magick.exe", "VERSION.txt", "LICENSE.txt", "NOTICE.txt")
 foreach ($fileName in $imageMagickFiles) {
     $relativePath = "ImageMagick\$fileName"
     if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot $relativePath) -PathType Leaf)) {
@@ -103,11 +102,6 @@ if ($RequireImageMagick -and (Test-Path -LiteralPath (Join-Path $PSScriptRoot "I
         Add-ValidationError "The bundled magick.exe could not be executed: $($_.Exception.Message)"
     }
 }
-
-$version = ""
-try { $version = (Get-Content -LiteralPath (Join-Path $PSScriptRoot "VERSION.txt") -Raw).Trim() }
-catch { Add-ValidationError "VERSION.txt could not be read." }
-if ($version -notmatch "^\d+\.\d+\.\d+$") { Add-ValidationError "VERSION.txt must contain a semantic version such as 1.0.0." }
 
 foreach ($warning in $warnings) { Write-Host "WARNING: $warning" -ForegroundColor Yellow }
 foreach ($validationError in $errors) { Write-Host "ERROR: $validationError" -ForegroundColor Red }

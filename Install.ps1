@@ -40,10 +40,10 @@ try {
         "SendToImageResizer.ps1",
         "presets.json",
         "presets.default.json",
-        "VERSION.txt",
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",
         "ImageMagick\magick.exe",
+        "ImageMagick\VERSION.txt",
         "ImageMagick\LICENSE.txt",
         "ImageMagick\NOTICE.txt"
     )
@@ -66,7 +66,6 @@ try {
         "Uninstall.ps1",
         "Uninstall.cmd",
         "presets.default.json",
-        "VERSION.txt",
         "LICENSE",
         "README.md",
         "THIRD_PARTY_NOTICES.md"

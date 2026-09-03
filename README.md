@@ -70,11 +70,11 @@ When reinstalling or updating, locally edited presets are retained. Updated fact
 
 Releases are created manually:
 
-1. Update `VERSION.txt` and merge the intended release state into `main`.
+1. Merge the intended release state into `main`.
 2. Open **Actions → Create Release → Run workflow**.
-3. Enter the exact version from `VERSION.txt`, for example `1.0.1`.
+3. Enter the new release version, for example `1.0.2`.
 
-The workflow validates the version, runs the end-to-end test, builds and verifies `SendToImageResizer.zip`, and publishes it together with `Install-Latest.cmd`. The fixed ZIP filename lets the installer always retrieve the latest published version.
+The entered version is the single source for the Git tag and release title. The workflow validates its format, runs the end-to-end test, builds and verifies `SendToImageResizer.zip`, and publishes it together with `Install-Latest.cmd`. The fixed ZIP filename lets the installer always retrieve the latest published version.
 
 ## Presets
 
@@ -152,7 +152,7 @@ If a step fails, the original is restored whenever possible and the failure is s
 
 The project is designed for the bundled **ImageMagick 7.1.2-21 portable Q8 x64** build. It deliberately does not download or update ImageMagick. This keeps image processing reproducible and allows the tool to work offline.
 
-The bundled `ImageMagick` directory contains `magick.exe`, its configuration resources and the required license files. The separate legacy utility executables are not needed because the application invokes all operations through `magick.exe`. Installation stops with a clear error if the required runtime files are missing.
+`ImageMagick/VERSION.txt` records the exact bundled build. The `ImageMagick` directory contains `magick.exe`, its configuration resources and the required license files. The separate legacy utility executables are not needed because the application invokes all operations through `magick.exe`. Installation stops with a clear error if the required runtime files are missing.
 
 ImageMagick is distributed under the ImageMagick License. See `ImageMagick/LICENSE.txt`, `ImageMagick/NOTICE.txt` and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 

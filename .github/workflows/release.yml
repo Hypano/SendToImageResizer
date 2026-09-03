@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version from VERSION.txt (for example 1.0.1)
+        description: Release version (for example 1.0.2)
         required: true
         type: string
 
@@ -24,10 +24,6 @@ jobs:
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
           if ($env:RELEASE_VERSION -notmatch '^\d+\.\d+\.\d+$') { throw "Version must use the format 1.2.3." }
-          $projectVersion = (Get-Content -LiteralPath .\VERSION.txt -Raw).Trim()
-          if ($projectVersion -ne $env:RELEASE_VERSION) {
-            throw "Requested version $($env:RELEASE_VERSION) does not match VERSION.txt ($projectVersion)."
-          }
 
       - name: Run end-to-end image test
         shell: powershell

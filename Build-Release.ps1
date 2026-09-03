@@ -22,7 +22,6 @@ $packageFiles = @(
     "SendToImageResizer.ps1",
     "presets.json",
     "presets.default.json",
-    "VERSION.txt",
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md"
@@ -50,7 +49,7 @@ try {
 
     Expand-Archive -LiteralPath $zipPath -DestinationPath $verificationRoot -Force
     $verifiedPackage = Join-Path $verificationRoot "SendToImageResizer"
-    foreach ($relativePath in $packageFiles + @("ImageMagick\magick.exe", "ImageMagick\LICENSE.txt", "ImageMagick\NOTICE.txt")) {
+    foreach ($relativePath in $packageFiles + @("ImageMagick\magick.exe", "ImageMagick\VERSION.txt", "ImageMagick\LICENSE.txt", "ImageMagick\NOTICE.txt")) {
         if (-not (Test-Path -LiteralPath (Join-Path $verifiedPackage $relativePath) -PathType Leaf)) {
             throw "Release archive is missing: $relativePath"
         }
