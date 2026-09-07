@@ -41,7 +41,7 @@ Presets support:
 - Optional subfolder processing, automatic orientation and timestamp preservation
 - JPG, JPEG, PNG and WebP files
 
-When using a `replace` preset, the new image is created and validated first. The original file is then moved to the Windows Recycle Bin as a recoverable backup.
+When using a `replace` preset, the new image is created and validated first. The original file is then moved to the Windows Recycle Bin as a recoverable backup named like `image_backup.jpg`.
 
 ## Command-line use
 
