@@ -244,6 +244,19 @@ function Move-ToRecycleBin {
     )
 }
 
+function Get-AvailableBackupPath {
+    param([Parameter(Mandatory = $true)][System.IO.FileInfo]$File)
+
+    $backupPath = Join-Path $File.DirectoryName ($File.BaseName + "_backup" + $File.Extension)
+    $counter = 2
+    while (Test-Path -LiteralPath $backupPath) {
+        $backupPath = Join-Path $File.DirectoryName ($File.BaseName + "_backup_" + $counter + $File.Extension)
+        $counter++
+    }
+
+    return $backupPath
+}
+
 function Invoke-ImageResize {
     param(
         [Parameter(Mandatory = $true)][System.IO.FileInfo]$File,
@@ -307,7 +320,7 @@ function Invoke-ImageResize {
             if ($preserveTimestamps) { Set-FileTimestamps -Path $outputPath -Timestamps $timestamps }
         }
         else {
-            $backupPath = Join-Path $File.DirectoryName (".stir-backup-{0}{1}" -f [Guid]::NewGuid().ToString("N"), $File.Extension)
+            $backupPath = Get-AvailableBackupPath -File $File
             Move-Item -LiteralPath $File.FullName -Destination $backupPath
             try {
                 Move-Item -LiteralPath $tempPath -Destination $File.FullName
